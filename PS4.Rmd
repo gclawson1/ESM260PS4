@@ -1,0 +1,46 @@
+---
+title: "Problem Set 4"
+author: "Panga Watch"
+date: "1/8/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readxl)
+```
+
+```{r}
+climate_change <- read_excel("Data_set_2.xlsx", sheet = "Climate change")
+```
+
+**Problem 1: Climate Change**
+First, there is growing pressure in Congress to relax environmental regulations affecting carbon dioxide emissions. You have been asked to provide evidence for changes in marine communities that may be due to climatic changes, such as increases in temperature. Your have data from a coastal site in Northern California that had been previously surveyed in 1955. During the ensuing 65 years there have been substantial changes in the abundances of several species. To help interpret the changes, you can look at the following information for all species: 
+
+1) the mode of development (i.e., planktonic larvae vs. non-planktonic larvae) 
+
+```{r}
+climate_change %>% arrange(`Development Mode`) %>%
+  ggplot(aes(x = reorder(Species, `Change in Density`), y = `Change in Density`, color = `Development Mode`)) +
+  geom_point()
+```
+
+
+2) the geographic range (i.e., does the species range occur primarily North or South of the site, or is it Cosmopolitan - both north and south)
+
+```{r}
+climate_change %>%
+  ggplot(aes(x = reorder(Species, `Change in Density`), y = `Change in Density`, color = `Geographic Range`)) +
+  geom_point()
+```
+
+3) the trophic level (i.e., predator, filter feeder, scavenger). What are the patterns of change? Try grouping the species by categories and see if anything emerges.
+
+```{r}
+climate_change %>%
+  ggplot(aes(x = reorder(Species, `Change in Density`), y = `Change in Density`, color = `Trophic Level`)) +
+  geom_point()
+```
+
