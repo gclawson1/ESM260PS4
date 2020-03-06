@@ -10,10 +10,17 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(readxl)
+library(janitor)
+library(ggrepel)
 ```
 
 ```{r}
 climate_change <- read_excel("Data_set_2.xlsx", sheet = "Climate change")
+nuclear <- read_excel("Data_set_2.xlsx", sheet = "Nuclear Power Plant Tidy")
+upwell <- read_excel("Data_set_2.xlsx", sheet = "upwell")
+crab <- read_excel("Data_set_2.xlsx", sheet = "crab") %>%
+  na.omit()
+
 ```
 
 **Problem 1: Climate Change**
@@ -23,24 +30,196 @@ First, there is growing pressure in Congress to relax environmental regulations 
 
 ```{r}
 climate_change %>% arrange(`Development Mode`) %>%
-  ggplot(aes(x = reorder(Species, `Change in Density`), y = `Change in Density`, color = `Development Mode`)) +
-  geom_point()
+  ggplot(aes(x = reorder(Species, `Change in Density`), y = `Change in Density`, fill = `Development Mode`)) +
+  geom_col() +
+  theme_bw() + 
+  scale_fill_manual(breaks = c("non-planktonic", "planktonic"), values = c("gray51", "royalblue"),
+                     labels = c("Non-planktonic", "Planktonic"), name = "") +
+  labs(x = "Species")
 ```
+
+There does not appear to be density changes dependent upon development type. Some planktonic and non-planktonic modes of development increase density while others do not. 
 
 
 2) the geographic range (i.e., does the species range occur primarily North or South of the site, or is it Cosmopolitan - both north and south)
 
 ```{r}
 climate_change %>%
-  ggplot(aes(x = reorder(Species, `Change in Density`), y = `Change in Density`, color = `Geographic Range`)) +
-  geom_point()
+  ggplot(aes(x = reorder(Species, `Change in Density`), y = `Change in Density`, fill = `Geographic Range`)) +
+  geom_col() +
+  theme_bw() + 
+  scale_fill_manual( values = c("gray51", "royalblue", "darkseagreen")) +
+  labs(x = "Species", title = "Change in Density of Species by Geographic Location")
 ```
+
+Geographic range does have an effect on density changes. In specific, species in the south tend to have increasing densities (positive), while species in the south have decreasing densities (negative). It is unclear of a significant effect on density changes in cosmopolitan areas, however, more species appear to have increasing densities. This suggests that climatic changes have impacted marine communities in California. With sea temperature increases, species in the north, who have not already adapted to warmer temperatures likely will suffer in the form of decreases in density. There were no other patterns that existed within the data regarding change in density. 
 
 3) the trophic level (i.e., predator, filter feeder, scavenger). What are the patterns of change? Try grouping the species by categories and see if anything emerges.
 
 ```{r}
 climate_change %>%
-  ggplot(aes(x = reorder(Species, `Change in Density`), y = `Change in Density`, color = `Trophic Level`)) +
-  geom_point()
+  ggplot(aes(x = reorder(Species, `Change in Density`), y = `Change in Density`, fill = `Trophic Level`)) +
+  geom_col() +
+  theme_bw() +
+  labs(x = "Species", title = "Change in Density of Species by Trophic Level") +
+  scale_fill_manual( values = c("gray51", "royalblue", "darkseagreen"), labels = c("Filter Feeder", "Predator", "Scavenger"))
 ```
+There does not appear to be density changes dependent upon trophic level.
+
+**Problem 2: Nuclear power plant**
+
+Second, El Diablo nuclear power plant is up for a renewal of its operating permit. One issue of concern is whether the plant has been altering the marine community near its discharge point (Diablo Cove). A monitoring program, which started ten years before the plant became operational in 2010, followed the abundance of 3 species of invertebrates at the discharge point and at two sites (Hyperion Bay & Noway Bay) that appeared to be at least superficially similar to the discharge point. You now also have ten years of monitoring data from the sites after the plant became operational. Are there any detectable impacts of the plant on these species? Which site(s) did you use as a control? Why?
+
+```{r}
+nuclear %>% 
+  ggplot(aes(x = Year, y = Density, color = Location)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~Species, scale = "free", nrow = 3) +
+  theme_bw() +
+  scale_color_manual( values = c("gray51", "royalblue", "darkseagreen")) +
+  labs(y = expression(Mean~Density~("#"/100~m^2)), title = "Species Density Monitoring Program")
+```
+
+The monitoring program shows very small impacts to species C after the plant became operational in 2010. I chose Hyperion Bay as a control because it seemed to be the most similar to Diablo Cove before the plant became operational. Specificaly species C densities increased at Diablo Cove compared to Hyperion Bay. However, these differences did not sustain between Hyperion Bay and Diablo Cove, and the trends began to look similar again after 2014. 
+
+**Problem 3: Fisheries and Invasive Species** 
+
+Finally, you have been asked to make recommendations regarding 2 key species of interest. One species is a crab (Cancer cancer). There is a great deal of interest in developing fisheries for Cancer cancer in both Oregon and California. The other species is a barnacle (Barnacle bill). Barnacle bill invaded the US West Coast possibly from Japan earlier in the century. It has become a nuisance species and regularly fouls pipes, ships etc. There is a great deal of interest in learning more about the dynamics of this species in an effort to eliminate it.
+
+Your job is to coordinate the new crab fishery for the West Coast of the US. In an attempt to regulate this new fishery more effectively, you recall that variation in the recruitment rate (i.e., the # of new individuals settling into the population) is one big problem in designing an effective management program. The traditional approach of looking for a simple relationship between the recruitment of young and the existing # of reproductive adults has failed repeatedly, and you want to explore new approaches. You realize that the problem lies in figuring out what factors cause the variable recruitment of young. You realize also that this information would be useful to understand the dynamics of the barnacle in an effort to eliminate it. You request all available data on the recruitment of both species from the past 20 years for both Northern California and Oregon.
+
+You quickly realize that the # of recruits varies dramatically in both species. This widespread recruitment variation in both species is problematic. If you don't know how many new crabs will enter the population, you cannot effectively determine the # of adults to harvest. Unless you can unravel the causes, you will not be able to effectively manage the new fishery or understand the population dynamics of the barnacle. You posit that the most likely limitations of prior attempts to predict recruitment solely on the basis of the # of adults are:
+
+1) the predictions ignore the fact that the species have open populations (i.e., they have large scale larval dispersal so that recruits may come from somewhere else)
+
+2) the predictions ignore environmental variation affecting adults (e.g., food supply, predators)
+
+3) the predictions ignore environmental variation affecting the success of larvae during their development (e.g., food supply, temperature, and predator abundances).
+
+To rectify these limitations, you ask for all available information on the stock size of adults and on patterns of environmental variation.
+
+Remember: if there is a stock-recruitment relationship, the stock size (the # of adults) in one year affects the recruitment rate in the next year (i.e., the recruits in 2004 come from adults censused in 2003).
+ - Cancer cancer larvae live approximately 3 weeks before settling, whereas Barnacle bill larvae live only 10 days. Both species spawn in the spring.
+Key Point: At this time of year, the currents run from north to south along the shore.
+
+ - Barnacle bill are immobile and filter phytoplankton from the water. Cancer cancer are scavengers and eat detritus that settles onto the seafloor form the overlying water.
+To get information on food availability, you only have upwelling indices. Upwelling is an important coastal process that brings nutrients up to the surface. The added nutrients generate blooms of phytoplankton. The rate of upwelling is measured by an index that can be positive or negative. Large positive values imply strong upwelling (and abundant nutrients and phytoplankton). Negative values imply downwelling (and low nutrients and rare phytoplankton). You obtain values for the summer, when juveniles are developing and for the winter, when adults are producing new eggs. Remember, values affecting adults are for different years than values affecting larvae.
+
+What patterns do you see in the recruitment of these species at these two sites relative to these other variables?
+
+Try plotting the recruitment data against the other variables that might be able to explain them. Use a
+scatterplot. Look for patterns (e.g., straight lines or smooth curves) that imply there is a relationship between the variable and the pattern of recruitment. In your write-up, only include plots of the patterns that you find. You don't need to document the patterns that are not there.
+
+```{r}
+# Wrangle data for crab
+crab_barnacle <- crab %>% 
+  clean_names() %>% 
+  gather(`crab_ca`,`crab_or`,`barnacle_ca`,`barnacle_or`, key = "site", value = "density") %>% 
+  spread(type, density) %>% 
+  rename(adult_density = adult) %>%
+  rename(recruit_density = recruit) %>% 
+  separate(site, into = c("species", "state"), sep = "_") %>% 
+  arrange(year, species)
+
+upwelling <- upwell %>%
+  clean_names() %>% 
+  gather(`winter_ca`,`summer_ca`,`winter_or`,`summer_or`, key = "season", value = "upwelling_indices") %>%
+  separate(season, into = c("season","state"), sep = "_") %>% 
+  arrange(year)
+
+
+# Join crab_barnacle to upwelling
+crab_fishery <- left_join(crab_barnacle, upwelling) %>%
+  clean_names() %>% 
+  mutate(state = str_to_upper(state)) %>% 
+  arrange(year)
+
+# barnacles trends
+crab_fishery %>% 
+  filter(species == "barnacle") %>%
+  ggplot(aes(x = adult_density, y = recruit_density)) +
+  geom_point(aes(color = year)) +
+  facet_wrap(~state, scale = "free", nrow = 2) +
+  labs(x = "Adult Density", y = "Recruit Density", title = "Barnacle Recruit and Adult Densities", color = "Year") +
+  theme_bw() +
+  geom_text(aes(label = year)) 
+   #geom_text_repel(aes(label = year), nudge_y = 1, segment_size = 0.2)
+
+# crab trends 
+crab_fishery %>% 
+  filter(species == "crab") %>%
+  ggplot(aes(x = adult_density, y = recruit_density)) +
+  geom_point(aes(color = year)) +
+  facet_wrap(~state, scale = "free", nrow = 2) +
+  labs(x = "Adult Density", y = "Recruit Density", title = "Crab Recruit and Adult Densities", color = "Year") +
+  theme_bw()
+```
+
+There is a positive relationship between recruit density and adult density for barnacles in California. High adult densities in the previous year corresponds to high recruit densities in the following year, as shown in the graph. It appears that high densities were more present in the early 2000s. 
+
+```{r}
+crab_fishery %>% 
+  filter(species == "barnacle") %>%
+ggplot(aes(x = upwelling_indices, y = recruit_density)) +
+  geom_point(aes(color = year)) +
+  facet_grid(season~state, scale = "free") +
+  labs(x = "Upwelling Index", y = "Recruit Density", title = "Recruit Density vs. Upwelling Index for Barnacles", color = "Year") +
+  theme_bw()
+
+crab_fishery %>% 
+  filter(species == "barnacle") %>%
+ggplot(aes(x = upwelling_indices, y = adult_density)) +
+  geom_point(aes(color = year)) +
+  facet_grid(season~state, scale = "free") +
+  labs(x = "Upwelling Index", y = "Adult Density", title = "Adult Density vs. Upwelling Index for Barnacles", color = "Year") +
+  theme_bw()
+
+crab_fishery %>% 
+  filter(species == "crab") %>%
+ggplot(aes(x = upwelling_indices, y = recruit_density)) +
+  geom_point(aes(color = year)) +
+  facet_grid(season~state, scale = "free") +
+  labs(x = "Upwelling Index", y = "Recruit Density", title = "Recruit Density vs. Upwelling Index for Crabs", color = "Year") +
+  theme_bw()
+
+crab_fishery %>% 
+  filter(species == "crab") %>%
+ggplot(aes(x = upwelling_indices, y = adult_density)) +
+  geom_point(aes(color = year)) +
+  facet_grid(season~state, scale = "free") +
+  labs(x = "Upwelling Index", y = "Adult Density", title = "Adult Density vs. Upwelling Index for Crabs", color = "Year") +
+  theme_bw()
+```
+
+```{r}
+##  Final graphs to report? 
+
+# barnacles trends
+crab_fishery %>% 
+  filter(species == "barnacle", state == "CA", season == "summer") %>%
+  ggplot(aes(x = adult_density, y = recruit_density)) +
+  geom_point(aes(color = year)) +
+  labs(x = "Adult Density", y = "Recruit Density", title = "California Barnacle Recruit and Adult Densities", color = "Year") +
+  theme_bw() +
+  #geom_text(aes(label = year)) +
+   geom_text_repel(aes(label = year), nudge_y = 1, segment_size = 0.2)
+
+
+crab_fishery %>% 
+  filter(species == "barnacle", 
+         state == "CA", 
+         season == "winter") %>%
+ggplot(aes(x = upwelling_indices, y = recruit_density)) +
+  geom_point(aes(color = year)) +
+  labs(x = "Calornia Upwelling Index", y = "Recruit Density", title = "Barnacle Recruit Density and Upwelling Index During Winter", color = "Year") +
+  theme_bw() +
+   #geom_text(aes(label = year), position=position_jitter(width=0.5,height=0.5))
+ geom_text_repel(aes(label = year), nudge_y = 1, segment_size = 0.2)
+
+```
+
+
+
+
 
